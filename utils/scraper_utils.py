@@ -18,23 +18,31 @@ def get_browser_config() -> BrowserConfig:
         headless=False,
         verbose=True,
     )
+from langchain_google_genai import ChatGoogleGenerativeAI
+import os
 
-def get_llm_strategy(user_prompt_extractiobn: str ) -> LLMExtractionStrategy:
+from crawl4ai import LLMExtractionStrategy, LLMConfig
+
+def get_llm_strategy(user_prompt_extraction: str ) -> LLMExtractionStrategy:
+    llm_config = LLMConfig(
+        provider=ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1),
+        api_token=os.getenv("GOOGLE_API_KEY")
+    )
+
     return LLMExtractionStrategy(
-        provider="groq/deepseek-r1-distill-llama-70b",
-        api_token=os.getenv("GROQ_API_KEY"),
+        llm_config=llm_config,  
         schema=Venue.model_json_schema(),
         extraction_type="schema",
-        instruction = (
-            f"The following text represents key information extracted from a user's CV: {user_prompt_extractiobn} \n"
+        instruction=(
+            f"The following text represents key information extracted from a user's CV: {user_prompt_extraction} \n"
             "Based on this information, identify job listings from the content below that are highly relevant to the user's experience, skills, and preferences. "
             "You must only return jobs that closely align with the user's background, even if the match is partial.\n"
             "Return each matched job as a structured object including: title, company, location, employment type, required skills, experience level, and a one-line reason why this job fits the user."
-        ), 
-
+        ),
         input_format="markdown",
         verbose=True,
     )
+
 
 async def check_no_results(
     crawler: AsyncWebCrawler,

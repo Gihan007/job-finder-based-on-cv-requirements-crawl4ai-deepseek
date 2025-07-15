@@ -31,9 +31,13 @@ chunks = text_splitter.split_text(raw_text)
 # View the first chunk (for example)
 #print(len(chunks))
 
-# Your credentials
-weaviate_url = "https://uv5embawqwgf65fbuhm1q.c0.asia-southeast1.gcp.weaviate.cloud"
-weaviate_api_key = "PJr2228NasulpFvGwNPcJdjnnNnDwpN2iFJq"
+# # Your credentials
+# weaviate_url = "https://uv5embawqwgf65fbuhm1q.c0.asia-southeast1.gcp.weaviate.cloud"
+# weaviate_api_key = "PJr2228NasulpFvGwNPcJdjnnNnDwpN2iFJq"
+
+
+weaviate_url = "https://oifn3nasg6goiib7a1ig.c0.asia-southeast1.gcp.weaviate.cloud"
+weaviate_api_key = "R1QyVUgvbGhDN3hQQmlJel96aGN3Y0lFQjhWa25yelhzMVJaZ3FycXc2a2Y0WDNaYTVzQ2huT3lHUDRBPV92MjAw"
 
 
 # Create client
@@ -50,6 +54,7 @@ else:
     
 
 #Details about Web page , In demo i used dialog carres Which is opened now
+
 BASE_URL = "https://hcmcloud.dialog.lk/CareerPortal/Careers?q=bEopnWmcv9llMiBG3zygOw%3D%3D"
 CSS_SELECTOR = "[class^='hcm-jpp-job']" #Inspect mode Class name
 REQUIRED_KEYS = ["title", "company", "location", "employment_type", "required_skills", "experience_level", "match_reason"]  #keys which is need for Key map
@@ -66,7 +71,7 @@ vector_db = Weaviate.from_documents(
 )
 
 # Retrieve top 3 most relevant chunks from Waviate
-retrieved_docs = vector_db.similarity_search("Job", k=3)  # "Job" is a dummy query; you can improve it later This is just for check The embedding is properly done or not
+retrieved_docs = vector_db.similarity_search("Skills", k=5)  # "Job" is a dummy query; you can improve it later This is just for check The embedding is properly done or not
 
 async def crawl_venues():
     user_prompt_extractiobn = "\n".join([doc.page_content for doc in retrieved_docs])

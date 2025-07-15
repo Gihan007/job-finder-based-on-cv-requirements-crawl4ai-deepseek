@@ -21,7 +21,7 @@ This project is an AI-based web scraping and job matching tool that leverages OC
 ```
 ├── ocr.py                # Converts PDF to structured text
 ├── main.py               # Embeds CV into Weaviate, runs scraper and LLM matching
-├── scrape.py             # Contains scraping and job extraction logic
+├──  venue.py             # Contains scraping and job extraction logic
 ├── models/
 │   └── venue.py          # Job schema model
 ├── utils/
