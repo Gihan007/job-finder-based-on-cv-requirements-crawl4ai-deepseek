@@ -1,0 +1,129 @@
+
+--- Page 1 ---
+**Programming languages:**
+Python, Java, JavaScript, C, C#
+**Web Development:**
+HTML, CSS , JavaScript
+**Concepts:**
+Data Analysis, Data Visualization, Machine Learning, Deep
+Learning, Time-Series Forecasting, Predictive Modeling,
+Natural Language Processing (NLP), AI, Probability, Statistics,
+Data Preprocessing, Feature Engineering, Python
+Programming, ARIMA, SARIMAX , DVC , MLFlow , Docker ,
+Grafana and promotheus , MLOps
+**SKILLS**
+**University of Kelaniya - Sri Lanka                     (2022-2026)**
+B. Sc. (Hons) Computer Science (AI Specialization) (Third
+Year | Second Semester)
+**EDUCATION**
+**Nalanda College, Colombo 10**
+**G**
+.C.E. Advanced Level 2020 Physical Science Stream
+Combined Mathematics, Physics, Chemistry
+**Z: 1.563**
+As a Computer Science undergraduate specializing in
+Artificial Intelligence, I aim to apply my skills in
+machine learning, time-series forecasting, and AI
+applications. Experienced in developing AI models
+and deploying web apps, I am proficient in Python,
+ARIMA, and SARIMAX for predictive analytics. I enjoy
+problem-solving, collaboration, and am eager to
+deepen my expertise in AI, deep learning, and data-
+driven decision-making. I seek an internship to
+contribute to impactful AI projects while growing my
+skills.
+**ABOUT**
+linkedin
+**AI Enthusiast | Computer Science Undergraduate Sp in Artificial intelligence**
+**GIHAN LAKMAL**
+gihanlakmal007@gmail.com
++94-76-9919877  | Oval view residence  ,Colombo 08, Sri Lanka.
+github
+**Medical Drug Sales Prediction based on Specific areas in SriLanka (July 2024 – dec 2024)**
+My First Research paper published by IEEE. Developed a medical drug sales prediction system for specific areas in Sri Lanka
+using Python, Time Series Models (ARIMA, SARIMAX), and deployed a public website. This project was accepted for the
+**International Research Conference on Smart Computing and System Engineering 2025.**
+**1.**
+**Songs Recommendation system Based on Emotion and Melody**
+Developed a machine learning and AI-based system to predict songs based on user emotions and melodies, offering a personalized
+music experience. Unlike traditional streaming platforms that focus only on genre-based recommendations, this system analyzes
+user emotions and melody preferences to provide highly relevant song suggestions. The project was selected for the final 10 in the
+Intellihack AI Hackathon, organized by UCSC.
+**2.**
+**Tensor-flow Individual Projects**
+Worked on beginner-level AI projects using TensorFlow, Keras, and Python libraries like Pandas, Numpy, Seaborn, and Scikit-learn to
+build and implement machine learning models. These projects helped enhance my understanding of AI concepts and hands-on
+experience with deep learning models
+**4.**
+**Tools:**
+MySQL, PL/SQL , MS SQL, Jupyter Notebooks,  Github,
+anaconda enviroment , VScode
+**Software Development:**
+OOP, Data Structures, Algorithms
+**PROJECTS**
+**AI & Data Science:**
+ML (Supervised/Unsupervised), NLP (Text Processing) , Gen AI
+**Machine Learning Individual Projects**
+Developed various beginner machine learning projects using models such as KNN, Logistic Regression, Random Forest, and Linear
+Regression. Notable projects include Classification Using KNN for classification tasks, Digits Prediction and Digits Predicting for
+image-based predictions, HR Classifier for employee attrition prediction, and Heart Prediction for predicting heart disease. I also
+worked on Spam Messages Classification to identify spam messages, Wine Classification for predicting wine quality, and Apple
+Stock Prediction using time-series data. These projects utilized Python libraries such as Scikit-learn, Pandas, NumPy, and Seaborn
+for data analysis and model development.
+**3.**
+**Technologies:**
+SQL , NumPy, Pandas, TensorFlow, Keras, Scikit-learn,
+Seaborn, Python, Flask, ARIMA, SARIMAX
+github
+github
+github
+github
+
+--- OCR Image 1 ---
+
+
+--- Page 2 ---
+**Dr. Rasika Rajapaksha**
+Senior Lecturer
+Department of Software Engineering
+Faculty of Computing and Technology
+University of Kelaniya
+rasikar@kln.ac.lk
++94 712611800
+**REFERENCES**
+**EXTRA - CURRICULAR**
+**Customer Experience Manager ( February 2024 - July 2024 )**
+Led the Incoming Global Volunteer team to successfully execute projects and deliver results, fostering collaboration
+and driving performance while actively contributed to leadership and project development within AIESEC,an
+international  youth organization focused on developing leadership potential in young people.
+Engaged in various team projects, collaborating with students from diverse cultural backgrounds.,delivered
+successful projects by balancing team dynamics and implementing strategies for effective project execution and
+enhanced cross-cultural communication and teamwork skills through interactions with international peers.
+**Customer Experience Co - Ordinator ( September 2023- January 2024 )**
+Coordinated customer experience initiatives, ensuring smooth interactions and satisfaction while supporting the
+delivery of high-quality service, directly interacting with foreign students. and provided hospitality and support,
+fostering a collaborative and welcoming team environment.
+**AIESEC in University of Kelaniya   (September 2023 - July 2024)**
+**University of Kelaniya Tennis Team Member  (June 2023 - Present)**
+**Organizing Committee Member VANGUARD ( March 2023 - May 2023 )**
+Contributed to the planning and execution of key event activities as an Organizing Committee Member, ensuring
+smooth operations and successful outcomes.
+**Rotaract Club in University of Kelaniya**
+**Committee Member**
+Active Committee Member in the Computer Science Students Association (CSSA) since July 2021, contributing to
+various initiatives and events to enhance the student experience
+**Computer Science Students Association in University Of Kelaniya  ( July 2021 - Present )**
+**LANGUAGES**
+English (Fluent)
+Sinhala (Native)
+Tamil    (Fluent)
+As a member of the University of Kelaniya Tennis Team, I competed in regional and national tournaments over two years.
+I led the team to victory in the Inter-Faculty Tournament and helped secure the Runner-Up position in the 2023 Inter-
+University Tournament. These experiences enhanced my teamwork, leadership, discipline, and focus under pressure,
+which I apply in both my academic and professional life.
+**AI Research Assistant Intern  (November 2024 - January 2025)**
+Worked on AI projects focusing on building generative AI models for Sri Lankan native languages, including Sinhala and
+Tamil. Our team collected a corpus of 40 million Tamil and Sinhala words, contributing to language model development.
+I gained hands-on experience in data analysis and preprocessing, enhancing the models' accuracy and relevance for
+native speakers. The project involved generative AI, computer vision, and audio generation, applying real-life data for
+improved solutions.
