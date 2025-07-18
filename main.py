@@ -16,8 +16,8 @@ from models.venue import Venue
 
 # load environment variables
 load_dotenv()
-weaviate_url = os.getenv("URL_WEAVIATE")
-weaviate_api_key = os.getenv("API_KEY_WEAVIATE")
+WEAVIATE_URL = os.getenv("URL_WEAVIATE")
+WEAVIATE_API_KEY = os.getenv("API_KEY_WEAVIATE")
 BASE_URL = os.getenv("URL_JOB_PORTAL")  # Job Website URL
 CSS_SELECTOR = os.getenv("CSS_SELECTOR_CLASS")  # Details about Web page
 TESSERACT_PATH = os.getenv("PATH_TESSERACT")
@@ -36,8 +36,8 @@ def run_ocr_extraction(cv_path, tesseract_path):
 def weaviate_setup():
     # Create client
     client = weaviate.Client(
-        url=weaviate_url,
-        auth_client_secret=AuthApiKey(weaviate_api_key),
+        url=WEAVIATE_URL,
+        auth_client_secret=AuthApiKey(WEAVIATE_API_KEY),
     )
 
     # Test connection

@@ -3,6 +3,7 @@ from typing import List, Set, Tuple
 from models.venue import Venue
 from utils.data_utils import is_complete_venue, is_duplicate_venue
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 import os
 from dotenv import load_dotenv
 
@@ -19,6 +20,8 @@ from crawl4ai import (
 load_dotenv()
 google_api_key = os.getenv("GOOGLE_API_KEY")
 google_model = os.getenv("GOOGLE_MODEL")
+groq_api_key = os.getenv("GROQ_API_KEY")
+groq_model = os.getenv("GROQ_MODEL")
 
 
 def get_browser_config() -> BrowserConfig:
@@ -30,9 +33,32 @@ def get_browser_config() -> BrowserConfig:
 
 
 def get_llm_strategy(user_prompt_extraction: str ) -> LLMExtractionStrategy:
+    # Todo: Testing required !!!!!
+    llm_provider = None
+    api_token = None
+
+    # Prioritize Groq if the API key is present
+    if groq_api_key:
+        print("✅ Groq API key found. Initializing Groq LLM.")
+        llm_provider = ChatGroq(model_name=groq_model, temperature=0.1)
+        api_token = groq_api_key
+
+    # Fallback to Google if Groq key is not found
+    elif google_api_key:
+        print("⚠️ Groq API key not found. Falling back to Google Generative AI.")
+        llm_provider = ChatGoogleGenerativeAI(model=google_model, temperature=0.1)
+        api_token = google_api_key
+
+    # Raise an error if no keys are available
+    else:
+        raise ValueError(
+            "No API key provided. Please set either GROQ_API_KEY or "
+            "GOOGLE_API_KEY in your .env file."
+        )
+
     llm_config = LLMConfig(
-        provider=ChatGoogleGenerativeAI(model=google_model, temperature=0.1),
-        api_token=google_api_key
+        provider=llm_provider,
+        api_token=api_token
     )
 
     return LLMExtractionStrategy(
