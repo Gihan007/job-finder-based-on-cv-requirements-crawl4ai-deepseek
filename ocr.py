@@ -3,9 +3,12 @@ import pytesseract
 from PIL import Image
 import io
 import os
+from dotenv import load_dotenv
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-PDF_FILE = "cv.pdf"
+# load environment variables
+load_dotenv()
+pytesseract.pytesseract.tesseract_cmd = os.getenv("PATH_TESSERACT")
+PDF_FILE = os.getenv("PATH_CV")
 
 TEXT_DIR = "extracted_texts"
 IMAGE_DIR = "extracted_images"

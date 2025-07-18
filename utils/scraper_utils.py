@@ -1,8 +1,9 @@
 import json
-import os
 from typing import List, Set, Tuple
 from models.venue import Venue
 from utils.data_utils import is_complete_venue, is_duplicate_venue
+from langchain_google_genai import ChatGoogleGenerativeAI
+import os
 
 from crawl4ai import (
     AsyncWebCrawler,
@@ -10,7 +11,9 @@ from crawl4ai import (
     CacheMode,
     CrawlerRunConfig,
     LLMExtractionStrategy,
+    LLMConfig,
 )
+
 
 def get_browser_config() -> BrowserConfig:
     return BrowserConfig(
@@ -18,10 +21,7 @@ def get_browser_config() -> BrowserConfig:
         headless=False,
         verbose=True,
     )
-from langchain_google_genai import ChatGoogleGenerativeAI
-import os
 
-from crawl4ai import LLMExtractionStrategy, LLMConfig
 
 def get_llm_strategy(user_prompt_extraction: str ) -> LLMExtractionStrategy:
     llm_config = LLMConfig(
