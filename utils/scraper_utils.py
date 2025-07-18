@@ -4,6 +4,7 @@ from models.venue import Venue
 from utils.data_utils import is_complete_venue, is_duplicate_venue
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
+from dotenv import load_dotenv
 
 from crawl4ai import (
     AsyncWebCrawler,
@@ -13,6 +14,11 @@ from crawl4ai import (
     LLMExtractionStrategy,
     LLMConfig,
 )
+
+# load environment variables
+load_dotenv()
+google_api_key = os.getenv("GOOGLE_API_KEY")
+google_model = os.getenv("GOOGLE_MODEL")
 
 
 def get_browser_config() -> BrowserConfig:
@@ -25,8 +31,8 @@ def get_browser_config() -> BrowserConfig:
 
 def get_llm_strategy(user_prompt_extraction: str ) -> LLMExtractionStrategy:
     llm_config = LLMConfig(
-        provider=ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1),
-        api_token=os.getenv("GOOGLE_API_KEY")
+        provider=ChatGoogleGenerativeAI(model=google_model, temperature=0.1),
+        api_token=google_api_key
     )
 
     return LLMExtractionStrategy(
