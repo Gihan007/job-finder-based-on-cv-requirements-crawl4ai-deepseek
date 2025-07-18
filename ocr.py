@@ -3,65 +3,80 @@ import pytesseract
 from PIL import Image
 import io
 import os
-from dotenv import load_dotenv
+import argparse
 
-# load environment variables
-load_dotenv()
-pytesseract.pytesseract.tesseract_cmd = os.getenv("PATH_TESSERACT")
-PDF_FILE = os.getenv("PATH_CV")
 
-TEXT_DIR = "extracted_texts"
-IMAGE_DIR = "extracted_images"
-os.makedirs(TEXT_DIR, exist_ok=True)
-os.makedirs(IMAGE_DIR, exist_ok=True)
+def main(arguments):
+    # load environment variables
+    pytesseract.pytesseract.tesseract_cmd = arguments.tesseract
+    pdf_file = arguments.cv
 
-base_name = os.path.splitext(os.path.basename(PDF_FILE))[0]
-text_output_path = os.path.join(TEXT_DIR, f"{base_name}.txt")
-image_output_dir = os.path.join(IMAGE_DIR, base_name)
-os.makedirs(image_output_dir, exist_ok=True)
+    text_dir = "extracted_texts"
+    image_dir = "extracted_images"
+    os.makedirs(text_dir, exist_ok=True)
+    os.makedirs(image_dir, exist_ok=True)
 
-full_text = ""
+    base_name = os.path.splitext(os.path.basename(pdf_file))[0]
+    text_output_path = os.path.join(text_dir, f"{base_name}.txt")
+    image_output_dir = os.path.join(image_dir, base_name)
+    os.makedirs(image_output_dir, exist_ok=True)
 
-with fitz.open(PDF_FILE) as pdf:
-    for i, page in enumerate(pdf):
-        full_text += f"\n--- Page {i + 1} ---\n"
+    full_text = ""
 
-        # Extract detailed text info
-        blocks = page.get_text("dict")["blocks"]
-        for block in blocks:
-            if "lines" in block:
-                for line in block["lines"]:
-                    line_text = ""
-                    for span in line["spans"]:
-                        font = span["font"]
-                        text = span["text"].strip()
-                        if not text:
-                            continue
-                        if "Bold" in font or span["size"] > 12:  # Threshold for bold/heading
-                            line_text += f"\n**{text}**\n"
-                        else:
-                            line_text += f"{text} "
-                    full_text += line_text.strip() + "\n"
+    with fitz.open(pdf_file) as pdf:
+        for i, page in enumerate(pdf):
+            full_text += f"\n--- Page {i + 1} ---\n"
 
-        # Extract images
-        images = page.get_images(full=True)
-        for img_index, img in enumerate(images):
-            xref = img[0]
-            base_image = pdf.extract_image(xref)
-            image_bytes = base_image["image"]
-            img_ext = base_image["ext"]
-            img_filename = os.path.join(image_output_dir, f"page_{i + 1}_image_{img_index + 1}.{img_ext}")
+            # Extract detailed text info
+            blocks = page.get_text("dict")["blocks"]
+            for block in blocks:
+                if "lines" in block:
+                    for line in block["lines"]:
+                        line_text = ""
+                        for span in line["spans"]:
+                            font = span["font"]
+                            text = span["text"].strip()
+                            if not text:
+                                continue
+                            if "Bold" in font or span["size"] > 12:  # Threshold for bold/heading
+                                line_text += f"\n**{text}**\n"
+                            else:
+                                line_text += f"{text} "
+                        full_text += line_text.strip() + "\n"
 
-            with open(img_filename, "wb") as img_file:
-                img_file.write(image_bytes)
+            # Extract images
+            images = page.get_images(full=True)
+            for img_index, img in enumerate(images):
+                xref = img[0]
+                base_image = pdf.extract_image(xref)
+                image_bytes = base_image["image"]
+                img_ext = base_image["ext"]
+                img_filename = os.path.join(image_output_dir, f"page_{i + 1}_image_{img_index + 1}.{img_ext}")
 
-            img = Image.open(io.BytesIO(image_bytes))
-            ocr_text = pytesseract.image_to_string(img, lang='eng')
-            full_text += f"\n--- OCR Image {img_index + 1} ---\n{ocr_text.strip()}\n"
+                with open(img_filename, "wb") as img_file:
+                    img_file.write(image_bytes)
 
-with open(text_output_path, "w", encoding="utf-8") as f:
-    f.write(full_text)
+                img = Image.open(io.BytesIO(image_bytes))
+                ocr_text = pytesseract.image_to_string(img, lang='eng')
+                full_text += f"\n--- OCR Image {img_index + 1} ---\n{ocr_text.strip()}\n"
 
-print("✅ Processing complete!")
-print(f"Text saved to: {text_output_path}")
-print(f"Images saved in: {image_output_dir}")
+    with open(text_output_path, "w", encoding="utf-8") as f:
+        f.write(full_text)
+
+    print("✅ Processing complete!")
+    print(f"Text saved to: {text_output_path}")
+    print(f"Images saved in: {image_output_dir}")
+
+
+if __name__ == "__main__":
+    # Create argument parser
+    parser = argparse.ArgumentParser(description='Example script with arguments')
+
+    # Add arguments
+    parser.add_argument('cv', default="cv.pdf", help='Path to the PDF file of the CV')
+    parser.add_argument('tesseract', '-t', default=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+                        help='Path to the Tesseract execution file')
+
+    # Parse arguments
+    args = parser.parse_args()
+    main(args)
