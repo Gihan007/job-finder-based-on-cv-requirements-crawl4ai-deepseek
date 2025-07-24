@@ -13,6 +13,7 @@ langchain-text-splitters>=0.3.0
 pydantic>=2.0.0,<3.0.0
 
 # Web crawling and data processing
+playwright==1.54.0
 crawl4ai==0.7.0
 requests==2.32.4
 pandas==2.3.1

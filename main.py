@@ -4,26 +4,35 @@ import sys
 from crawl4ai import AsyncWebCrawler
 from dotenv import load_dotenv
 import os
-from pathlib import Path
 import weaviate
+import weaviate.classes as wvc
+from pathlib import Path
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from weaviate.auth import Auth
-from langchain_community.vectorstores import Weaviate
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
 from utils.data_utils import save_venues_to_csv
 from utils.scraper_utils import fetch_and_process_page, get_browser_config, get_llm_strategy
 from models.venue import Venue
 
+
 # load environment variables
 load_dotenv()
-WEAVIATE_URL = os.getenv("URL_WEAVIATE")
-WEAVIATE_API_KEY = os.getenv("API_KEY_WEAVIATE")
+CV_PATH = os.getenv("PATH_CV")
+TESSERACT_PATH = os.getenv("PATH_TESSERACT")
+OCR_TEXTS_DIR = os.getenv("OCR_TEXT_DIR")
 BASE_URL = os.getenv("URL_JOB_PORTAL")  # Job Website URL
 CSS_SELECTOR = os.getenv("CSS_SELECTOR_CLASS")  # Details about Web page
-TESSERACT_PATH = os.getenv("PATH_TESSERACT")
-CV_PATH = os.getenv("PATH_CV")
-OCR_TEXTS_DIR = os.getenv("OCR_TEXT_DIR")
+WEAVIATE_URL = os.getenv("URL_WEAVIATE")
+WEAVIATE_API_KEY = os.getenv("API_KEY_WEAVIATE")
+EMBEDDING_MODEL_NAME = os.getenv('EMBEDDING_MODEL_NAME', 'sentence-transformers/all-mpnet-base-v2')
+EMBEDDING_DEVICE = os.getenv('EMBEDDING_DEVICE', 'cpu')
+EMBEDDING_NORMALIZE = os.getenv('EMBEDDING_NORMALIZE', 'true').lower() == 'true'
+
+EMBEDDING_CONFIG = {
+    'model_kwargs': {'device': EMBEDDING_DEVICE},
+    'encode_kwargs': {'normalize_embeddings': EMBEDDING_NORMALIZE}
+}
+
 
 
 def run_ocr_extraction(cv_path, tesseract_path):
@@ -46,18 +55,16 @@ def run_ocr_extraction(cv_path, tesseract_path):
         print("OCR texts and images already exist!\nSkip OCR Process!")
 
 
-def weaviate_setup():
-    # Create client for Weaviate Cloud resource
+def establish_weaviate_connection():
+    """Establishes connection to Weaviate instance."""
     if WEAVIATE_API_KEY is not None:
         client = weaviate.connect_to_weaviate_cloud(
             cluster_url=WEAVIATE_URL,
             auth_credentials=Auth.api_key(WEAVIATE_API_KEY),
         )
     else:
-        # Create client for local Weaviate; connects to http://localhost:8080 and gRPC at localhost:50051
         client = weaviate.connect_to_local()
 
-    # Test connection
     if client.is_ready():
         print("✅ Successfully connected to Weaviate!")
     else:
@@ -65,47 +72,91 @@ def weaviate_setup():
     return client
 
 
-def weaviate_add(client):
-    # Downloads standard model from HuggingFace once and runs it locally afterwards
-    model_name = "sentence-transformers/all-mpnet-base-v2"  # Default model used, check models on MTEB Leaderboard
-    model_kwargs = {'device': 'cpu'}
-    encode_kwargs = {'normalize_embeddings': False}
-    hf_embeddings = HuggingFaceEmbeddings(model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs)
-    ocr_output_file_path = os.path.join(OCR_TEXTS_DIR, Path(CV_PATH).stem + ".txt")  # which comes from the Executing the ocr.py (Converting pdf into Text File)
+def create_collection_if_not_exists(client: weaviate.WeaviateClient, collection_name: str):
+    """Creates a collection if it doesn't exist."""
+    if not client.collections.exists(collection_name):
+        print(f"Creating collection '{collection_name}'...")
+        client.collections.create(
+            name=collection_name,
+            properties=[
+                wvc.config.Property(name="text", data_type=wvc.config.DataType.TEXT),
+                wvc.config.Property(name="resume_id", data_type=wvc.config.DataType.TEXT)
+            ],
+            vectorizer_config=wvc.config.Configure.Vectorizer.none(),
+            vector_index_config=wvc.config.Configure.VectorIndex.hnsw(
+                distance_metric=wvc.config.VectorDistances.COSINE
+            )
+        )
+        print(f"✅ Collection '{collection_name}' created.")
+    else:
+        print(f"✅ Collection '{collection_name}' already exists.")
 
-    # Read the plain text
+def process_and_add_resume(client: weaviate.WeaviateClient, collection_name: str):
+    """Processes and adds a resume's data, but only if it doesn't already exist."""
+    unique_resume_id = os.path.basename(CV_PATH)
+    # Create collection if it doesn't exist
+    create_collection_if_not_exists(client, collection_name)
+
+    collection = client.collections.get(collection_name)
+
+    # Check for duplicates
+    response = collection.query.fetch_objects(
+        filters=wvc.query.Filter.by_property("resume_id").equal(unique_resume_id),
+        limit=1
+    )
+
+    if len(response.objects) > 0:
+        print(f"❌ Resume '{unique_resume_id}' already exists. Skipping.")
+        return
+
+    # Process file - same as original code
+    model_name = "sentence-transformers/all-mpnet-base-v2"
+    hf_embeddings = HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL_NAME,
+        **EMBEDDING_CONFIG
+    )
+
+    ocr_output_file_path = os.path.join(OCR_TEXTS_DIR, Path(CV_PATH).stem + ".txt")
+
     with open(ocr_output_file_path, "r", encoding="utf-8") as f:
         raw_text = f.read()
 
-    # Create splitter
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=25)
-
-    # Split the plain string, NOT documents
     chunks = text_splitter.split_text(raw_text)
+    vectors = hf_embeddings.embed_documents(chunks)
 
-    # View the first chunk (for example)
-    #print(len(chunks))
+    # Add to Weaviate
+    with collection.batch.dynamic() as batch:
+        for i, chunk_text in enumerate(chunks):
+            batch.add_object(
+                properties={"text": chunk_text, "resume_id": unique_resume_id},
+                vector=vectors[i]
+            )
 
-    # Convert each chunk (string) into a Document cuz Weaviate only takes Document list , Not just raw data type data
-    documents = [Document(page_content=chunk) for chunk in chunks]
+    print(f"✅ Successfully added data for resume '{unique_resume_id}'.")
 
-    # Now pass the Document list to Weaviate
-    vector_db = Weaviate.from_documents(
-        documents,
-        embedding=hf_embeddings,
-        client=client,
-        by_text=False
+
+def retrieve_personalized_data(client: weaviate.WeaviateClient, collection_name: str, query: str, k_results: int):
+    """Retrieves data filtered by a specific resume_id to ensure data isolation."""
+    collection = client.collections.get(collection_name)
+    resume_id = os.path.basename(CV_PATH)
+    # Create query embedding
+    hf_embeddings = HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL_NAME,
+        **EMBEDDING_CONFIG
     )
-    return vector_db
+    query_vector = hf_embeddings.embed_query(query)
 
+    # Search with resume filter
+    response = collection.query.near_vector(near_vector=query_vector, limit=k_results,
+                                            filters=wvc.query.Filter.by_property("resume_id").equal(resume_id))
 
-def weaviate_retrieve(vector_db, query, retrieve_nr):
-    # Retrieve top 3 most relevant chunks from Waviate
-    return vector_db.similarity_search(query, k=retrieve_nr)  # "Job" is a dummy query; you can improve it later This is just for check The embedding is properly done or not
+    # Return as simple list of text chunks
+    return [obj.properties["text"] for obj in response.objects]
 
 
 async def crawl_venues(retrieved_docs):
-    user_prompt_extraction = "\n".join([doc.page_content for doc in retrieved_docs])
+    user_prompt_extraction = "\n".join(retrieved_docs)
     print(user_prompt_extraction)
     browser_config = get_browser_config()
     llm_strategy = get_llm_strategy(user_prompt_extraction)
@@ -119,7 +170,7 @@ async def crawl_venues(retrieved_docs):
     REQUIRED_KEYS = list(Venue.model_fields.keys())
 
     async with AsyncWebCrawler(browser=browser_config) as crawler:
-        while (page_number != 10):  # since this is just dummy project we dont go though lot of pages
+        while (page_number != 2):  # since this is just dummy project we dont go though lot of pages
             venues, no_results_found = await fetch_and_process_page(
                 crawler,
                 page_number,
@@ -154,7 +205,8 @@ async def crawl_venues(retrieved_docs):
 
 if __name__ == "__main__":
     run_ocr_extraction(CV_PATH, TESSERACT_PATH)
-    weaviate_client = weaviate_setup()
-    weaviate_db = weaviate_add(weaviate_client)
-    retrieved_chunks = weaviate_retrieve(weaviate_db, "Skills", 5)
+    weaviate_client = establish_weaviate_connection()
+    process_and_add_resume(weaviate_client, "Resumes")
+    # "Skills" is a dummy query; you can improve it later This is just for check The embedding is properly done or not
+    retrieved_chunks = retrieve_personalized_data(weaviate_client, "Resumes", "Skills", 3)
     asyncio.run(crawl_venues(retrieved_chunks))

@@ -1,5 +1,6 @@
 import json
 from typing import List, Set, Tuple
+from pathlib import Path
 from models.venue import Venue
 from utils.data_utils import is_complete_venue, is_duplicate_venue
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -17,11 +18,15 @@ from crawl4ai import (
 )
 
 # load environment variables
-load_dotenv()
-google_api_key = os.getenv("GOOGLE_API_KEY")
-google_model = os.getenv("GOOGLE_MODEL")
-groq_api_key = os.getenv("GROQ_API_KEY")
-groq_model = os.getenv("GROQ_MODEL")
+# Get the path to the .env file one directory above
+dotenv_path = Path(__file__).resolve().parent.parent / '.env'
+
+# Load the .env file
+load_dotenv(dotenv_path)
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_MODEL = os.getenv("GOOGLE_MODEL")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL")
 
 
 def get_browser_config() -> BrowserConfig:
@@ -32,22 +37,22 @@ def get_browser_config() -> BrowserConfig:
     )
 
 
-def get_llm_strategy(user_prompt_extraction: str ) -> LLMExtractionStrategy:
+def get_llm_strategy(user_prompt_extraction: str) -> LLMExtractionStrategy:
     # Todo: Testing required !!!!!
     llm_provider = None
     api_token = None
 
     # Prioritize Groq if the API key is present
-    if groq_api_key:
+    if GROQ_API_KEY:
         print("✅ Groq API key found. Initializing Groq LLM.")
-        llm_provider = ChatGroq(model_name=groq_model, temperature=0.1)
-        api_token = groq_api_key
+        llm_provider = ChatGroq(model=GROQ_MODEL, temperature=0.1)
+        api_token = GROQ_API_KEY
 
     # Fallback to Google if Groq key is not found
-    elif google_api_key:
-        print("⚠️ Groq API key not found. Falling back to Google Generative AI.")
-        llm_provider = ChatGoogleGenerativeAI(model=google_model, temperature=0.1)
-        api_token = google_api_key
+    elif GOOGLE_API_KEY:
+        print("✅ Google API key found. Initializing Google LLM.")
+        llm_provider = ChatGoogleGenerativeAI(model=GOOGLE_MODEL, temperature=0.1)
+        api_token = GOOGLE_API_KEY
 
     # Raise an error if no keys are available
     else:
