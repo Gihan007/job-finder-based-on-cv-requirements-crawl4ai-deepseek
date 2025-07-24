@@ -151,6 +151,8 @@ def retrieve_personalized_data(client: weaviate.WeaviateClient, collection_name:
     response = collection.query.near_vector(near_vector=query_vector, limit=k_results,
                                             filters=wvc.query.Filter.by_property("resume_id").equal(resume_id))
 
+    # Closing the client connection frees up resources
+    client.close()
     # Return as simple list of text chunks
     return [obj.properties["text"] for obj in response.objects]
 
@@ -165,9 +167,7 @@ async def crawl_venues(retrieved_docs):
     all_venues = []
     seen_names = set()
     # Keys which is need for Key map, defined in models/venue.py
-    # REQUIRED_KEYS = ["title", "company", "location", "employment_type",
-    #                  "required_skills", "experience_level", "match_reason"]
-    REQUIRED_KEYS = list(Venue.model_fields.keys())
+    required_keys = list(Venue.model_fields.keys())
 
     async with AsyncWebCrawler(browser=browser_config) as crawler:
         while (page_number != 2):  # since this is just dummy project we dont go though lot of pages
@@ -178,7 +178,7 @@ async def crawl_venues(retrieved_docs):
                 CSS_SELECTOR,
                 llm_strategy,
                 session_id,
-                REQUIRED_KEYS,
+                required_keys,
                 seen_names,
                 user_prompt_extraction,
             )
@@ -210,3 +210,4 @@ if __name__ == "__main__":
     # "Skills" is a dummy query; you can improve it later This is just for check The embedding is properly done or not
     retrieved_chunks = retrieve_personalized_data(weaviate_client, "Resumes", "Skills", 3)
     asyncio.run(crawl_venues(retrieved_chunks))
+
