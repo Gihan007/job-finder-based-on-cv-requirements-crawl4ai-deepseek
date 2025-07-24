@@ -4,12 +4,13 @@ import sys
 from crawl4ai import AsyncWebCrawler
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 import weaviate
-from weaviate.auth import AuthApiKey
+from weaviate.auth import Auth
 from langchain_community.vectorstores import Weaviate
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.docstore.document import Document
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 from utils.data_utils import save_venues_to_csv
 from utils.scraper_utils import fetch_and_process_page, get_browser_config, get_llm_strategy
 from models.venue import Venue
@@ -22,23 +23,39 @@ BASE_URL = os.getenv("URL_JOB_PORTAL")  # Job Website URL
 CSS_SELECTOR = os.getenv("CSS_SELECTOR_CLASS")  # Details about Web page
 TESSERACT_PATH = os.getenv("PATH_TESSERACT")
 CV_PATH = os.getenv("PATH_CV")
+OCR_TEXTS_DIR = os.getenv("OCR_TEXT_DIR")
 
 
 def run_ocr_extraction(cv_path, tesseract_path):
-    # Executes the ocr script
-    subprocess.call([sys.executable,
-                     "target_script.py",
-                     "--cv", cv_path,
-                     "--tesseract", tesseract_path,
-                     ])
+    # Executes the ocr script if cv has not been analyzed
+    ocr_output_file_path = os.path.join(OCR_TEXTS_DIR, Path(CV_PATH).stem + ".txt")
+    if not os.path.exists(ocr_output_file_path):
+        try:
+            result = subprocess.run([
+                sys.executable,
+                "ocr.py",
+                "--cv", cv_path,
+                "--tesseract", tesseract_path
+            ], capture_output=True, text=True, check=True)
+
+            print(result.stdout)
+        except subprocess.CalledProcessError as e:
+            print("Script failed with return code", e.returncode)
+            print("STDERR:\n", e.stderr)
+    else:
+        print("OCR texts and images already exist!\nSkip OCR Process!")
 
 
 def weaviate_setup():
-    # Create client
-    client = weaviate.Client(
-        url=WEAVIATE_URL,
-        auth_client_secret=AuthApiKey(WEAVIATE_API_KEY),
-    )
+    # Create client for Weaviate Cloud resource
+    if WEAVIATE_API_KEY is not None:
+        client = weaviate.connect_to_weaviate_cloud(
+            cluster_url=WEAVIATE_URL,
+            auth_credentials=Auth.api_key(WEAVIATE_API_KEY),
+        )
+    else:
+        # Create client for local Weaviate; connects to http://localhost:8080 and gRPC at localhost:50051
+        client = weaviate.connect_to_local()
 
     # Test connection
     if client.is_ready():
@@ -49,11 +66,15 @@ def weaviate_setup():
 
 
 def weaviate_add(client):
-    huggingface_embeddings = HuggingFaceEmbeddings()
-    pages = "/extracted_texts/cv.txt"  # which comes from the Executing the ocr.py (Converting pdf into Text File)
+    # Downloads standard model from HuggingFace once and runs it locally afterwards
+    model_name = "sentence-transformers/all-mpnet-base-v2"  # Default model used, check models on MTEB Leaderboard
+    model_kwargs = {'device': 'cpu'}
+    encode_kwargs = {'normalize_embeddings': False}
+    hf_embeddings = HuggingFaceEmbeddings(model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs)
+    ocr_output_file_path = os.path.join(OCR_TEXTS_DIR, Path(CV_PATH).stem + ".txt")  # which comes from the Executing the ocr.py (Converting pdf into Text File)
 
     # Read the plain text
-    with open("extracted_texts/cv.txt", "r", encoding="utf-8") as f:
+    with open(ocr_output_file_path, "r", encoding="utf-8") as f:
         raw_text = f.read()
 
     # Create splitter
@@ -71,7 +92,7 @@ def weaviate_add(client):
     # Now pass the Document list to Weaviate
     vector_db = Weaviate.from_documents(
         documents,
-        embedding=huggingface_embeddings,
+        embedding=hf_embeddings,
         client=client,
         by_text=False
     )

@@ -4,21 +4,24 @@ from PIL import Image
 import io
 import os
 import argparse
+from dotenv import load_dotenv
 
+
+load_dotenv()
+OCR_TEXTS_DIR = os.getenv("OCR_TEXT_DIR")
+OCR_IMAGES_DIR = os.getenv("OCR_IMAGE_DIR")
 
 def main(arguments):
     # load environment variables
     pytesseract.pytesseract.tesseract_cmd = arguments.tesseract
     pdf_file = arguments.cv
 
-    text_dir = "extracted_texts"
-    image_dir = "extracted_images"
-    os.makedirs(text_dir, exist_ok=True)
-    os.makedirs(image_dir, exist_ok=True)
+    os.makedirs(OCR_TEXTS_DIR, exist_ok=True)
+    os.makedirs(OCR_IMAGES_DIR, exist_ok=True)
 
     base_name = os.path.splitext(os.path.basename(pdf_file))[0]
-    text_output_path = os.path.join(text_dir, f"{base_name}.txt")
-    image_output_dir = os.path.join(image_dir, base_name)
+    text_output_path = os.path.join(OCR_TEXTS_DIR, f"{base_name}.txt")
+    image_output_dir = os.path.join(OCR_IMAGES_DIR, base_name)
     os.makedirs(image_output_dir, exist_ok=True)
 
     full_text = ""
@@ -63,7 +66,7 @@ def main(arguments):
     with open(text_output_path, "w", encoding="utf-8") as f:
         f.write(full_text)
 
-    print("✅ Processing complete!")
+    print("✅ OCR Processing complete!")
     print(f"Text saved to: {text_output_path}")
     print(f"Images saved in: {image_output_dir}")
 
@@ -73,8 +76,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Example script with arguments')
 
     # Add arguments
-    parser.add_argument('cv', default="cv.pdf", help='Path to the PDF file of the CV')
-    parser.add_argument('tesseract', '-t', default=r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+    parser.add_argument('--cv', default="cv.pdf", help='Path to the PDF file of the CV')
+    parser.add_argument('-t', '--tesseract', default=r"/usr/bin/tesseract",
                         help='Path to the Tesseract execution file')
 
     # Parse arguments
