@@ -8,7 +8,7 @@ import weaviate
 import weaviate.classes as wvc
 from pathlib import Path
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from weaviate.auth import Auth
 from utils.data_utils import save_venues_to_csv
 from utils.scraper_utils import fetch_and_process_page, get_browser_config, get_llm_strategy
@@ -106,7 +106,7 @@ def process_and_add_resume(client: weaviate.WeaviateClient, collection_name: str
     )
 
     if len(response.objects) > 0:
-        print(f"❌ Resume '{unique_resume_id}' already exists. Skipping.")
+        print(f"⏭️ Resume '{unique_resume_id}' already exists. Skipping.")
         return
 
     # Process file - same as original code
@@ -121,7 +121,7 @@ def process_and_add_resume(client: weaviate.WeaviateClient, collection_name: str
     with open(ocr_output_file_path, "r", encoding="utf-8") as f:
         raw_text = f.read()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=25)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=150)
     chunks = text_splitter.split_text(raw_text)
     vectors = hf_embeddings.embed_documents(chunks)
 
@@ -159,7 +159,7 @@ def retrieve_personalized_data(client: weaviate.WeaviateClient, collection_name:
 
 async def crawl_venues(retrieved_docs):
     user_prompt_extraction = "\n".join(retrieved_docs)
-    print(user_prompt_extraction)
+    # print(user_prompt_extraction)
     browser_config = get_browser_config()
     llm_strategy = get_llm_strategy(user_prompt_extraction)
     session_id = "job finding"
@@ -180,7 +180,6 @@ async def crawl_venues(retrieved_docs):
                 session_id,
                 required_keys,
                 seen_names,
-                user_prompt_extraction,
             )
 
             if no_results_found:

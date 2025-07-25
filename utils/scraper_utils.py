@@ -30,15 +30,15 @@ GROQ_MODEL = os.getenv("GROQ_MODEL")
 def get_browser_config() -> BrowserConfig:
     return BrowserConfig(
         browser_type="chromium",
-        headless=False,
+        headless=True,
         verbose=True,
     )
 
 
 def get_llm_strategy(user_prompt_extraction: str) -> LLMExtractionStrategy:
+    # Check https://docs.litellm.ai/docs/providers for alternative providers and LLM models
     # Prioritize Groq if the API key is present
     if GROQ_API_KEY and GROQ_API_KEY.strip():
-        # Todo: Testing required !!!!!
         print("✅ Groq API key found. Initializing Groq LLM.")
         llm_config = LLMConfig(
             provider="groq/" + str(GROQ_MODEL),
@@ -110,7 +110,6 @@ async def fetch_and_process_page(
     session_id: str,
     required_keys: List[str],
     seen_names: Set[str],
-    user_prompt_extractiobn: str
 ) -> Tuple[List[dict], bool]:
 
     url = base_url
