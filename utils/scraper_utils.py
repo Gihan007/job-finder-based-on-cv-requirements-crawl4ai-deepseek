@@ -1,8 +1,10 @@
 import json
-import os
 from typing import List, Set, Tuple
+from pathlib import Path
 from models.venue import Venue
 from utils.data_utils import is_complete_venue, is_duplicate_venue
+import os
+from dotenv import load_dotenv
 
 from crawl4ai import (
     AsyncWebCrawler,
@@ -10,27 +12,58 @@ from crawl4ai import (
     CacheMode,
     CrawlerRunConfig,
     LLMExtractionStrategy,
+    LLMConfig,
 )
+
+# load environment variables
+# Get the path to the .env file one directory above
+dotenv_path = Path(__file__).resolve().parent.parent / '.env'
+
+# Load the .env file
+load_dotenv(dotenv_path)
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_MODEL = os.getenv("GOOGLE_MODEL")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL")
+
 
 def get_browser_config() -> BrowserConfig:
     return BrowserConfig(
         browser_type="chromium",
-        headless=False,
+        headless=True,
         verbose=True,
     )
-from langchain_google_genai import ChatGoogleGenerativeAI
-import os
 
-from crawl4ai import LLMExtractionStrategy, LLMConfig
 
-def get_llm_strategy(user_prompt_extraction: str ) -> LLMExtractionStrategy:
-    llm_config = LLMConfig(
-        provider=ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1),
-        api_token=os.getenv("GOOGLE_API_KEY")
-    )
+def get_llm_strategy(user_prompt_extraction: str) -> LLMExtractionStrategy:
+    # Check https://docs.litellm.ai/docs/providers for alternative providers and LLM models
+    # Prioritize Groq if the API key is present
+    if GROQ_API_KEY and GROQ_API_KEY.strip():
+        print("✅ Groq API key found. Initializing Groq LLM.")
+        llm_config = LLMConfig(
+            provider="groq/" + str(GROQ_MODEL),
+            api_token=GROQ_API_KEY,
+            temperature=0.1
+        )
 
-    return LLMExtractionStrategy(
-        llm_config=llm_config,  
+    # Fallback to Google if Groq key is not found
+    elif GOOGLE_API_KEY and GOOGLE_API_KEY.strip():
+        print("✅ Google API key found. Initializing Google LLM.")
+        llm_config = LLMConfig(
+            provider="gemini/" + str(GOOGLE_MODEL),
+            api_token=GOOGLE_API_KEY,
+            temperature=0.1
+        )
+
+    else:
+        raise ValueError(
+            "No API key provided. Please set either GROQ_API_KEY or "
+            "GOOGLE_API_KEY in your .env file."
+        )
+
+    # Create and return the extraction strategy
+    extraction_strategy = LLMExtractionStrategy(
+        llm_config=llm_config,
         schema=Venue.model_json_schema(),
         extraction_type="schema",
         instruction=(
@@ -42,6 +75,9 @@ def get_llm_strategy(user_prompt_extraction: str ) -> LLMExtractionStrategy:
         input_format="markdown",
         verbose=True,
     )
+
+    print("✅ LLM extraction strategy created successfully")
+    return extraction_strategy
 
 
 async def check_no_results(
@@ -74,7 +110,6 @@ async def fetch_and_process_page(
     session_id: str,
     required_keys: List[str],
     seen_names: Set[str],
-    user_prompt_extractiobn: str
 ) -> Tuple[List[dict], bool]:
 
     url = base_url
