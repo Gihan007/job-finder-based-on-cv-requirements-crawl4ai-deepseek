@@ -10,7 +10,7 @@ This project is an AI-based web scraping and job matching tool that leverages OC
 ## 🚀 Features
 
 - 📝 **CV Parsing**: Converts PDF CVs into structured text using OCR and text block analysis.
-- 🧠 **Semantic Matching**: Embeds CV content into a vector space for similarity-based job relevance matching using Weaviate.
+- 🧠 **Semantic Matching**: Embeds CV content into a vector space for similarity-based job relevance matching using `Weaviate`.
 - 🌐 **Web Scraping**: Scrapes job listings using `crawl4ai` and extracts structured data using LLM-based extraction.
 - 📄 **Output**: Saves top matched jobs in a CSV for easy viewing and integration.
 
@@ -36,31 +36,31 @@ This project is an AI-based web scraping and job matching tool that leverages OC
 
 ## ⚙️ Technologies Used & Why
 
-### 🔹 Python
+### 🔹 Python 🐍
 Used for overall backend scripting due to its rich ecosystem in AI, OCR, and web scraping.
 
-### 🔹 PyMuPDF (`fitz`)
+### 🔹 PyMuPDF (`fitz`) 📄
 Used to extract both text and images from the uploaded PDF CV. It provides precise control over layout blocks, fonts, and text formatting.
 
-### 🔹 Tesseract OCR (`pytesseract`)
+### 🔹 Tesseract OCR (`pytesseract`) 🔍
 Used to convert any images (scanned signatures, certificates, etc.) inside the CV to text. Helps enhance the completeness of the CV content before analysis.
 
-### 🔹 LangChain
+### 🔹 LangChain 🦜🔗
 Used to split the CV into logical chunks and interface with vector databases like Weaviate. It simplifies working with large documents and embeddings.
 
-### 🔹 HuggingFace Transformers
+### 🔹 HuggingFace Transformers 🤗
 Provides high-quality language embeddings that represent the semantic meaning of the CV content. These are then stored in Weaviate.
 
-### 🔹 Weaviate (Vector Database)
+### 🔹 Weaviate (Vector Database) 🧬📊
 Used to store the semantic vector representation of the CV chunks and perform similarity search against job prompts. Weaviate is fast, scalable, and integrates smoothly with LangChain.
 
-### 🔹 crawl4ai
+### 🔹 crawl4ai 🤖
 An intelligent web scraping framework powered by LLMs. It allows automatic extraction of structured data from HTML pages using prompt-driven extraction logic.
 
-### 🔹 AsyncIO
+### 🔹 AsyncIO ⏱️🔄
 Used to perform concurrent scraping across multiple pages without blocking, improving speed and performance.
 
-### 🔹 LLM Extraction Strategy (`groq/deepseek`)
+### 🔹 LLM Extraction Strategy (`groq/deepseek`) 🧠
 Used to extract only the most relevant jobs based on the user’s CV context. It ensures meaningful matches instead of random job listings.
 
 ---
@@ -68,28 +68,25 @@ Used to extract only the most relevant jobs based on the user’s CV context. It
 ## 🧪 How It Works
 
 1. **Step 1 – Add your CV**  
-   Place your `cv.pdf` inside the root directory of the project.
+   Place your `cv.pdf` in the project's root directory.
 
-2. **Step 2 – Run OCR**  
-   Execute the following to extract all text and images from the PDF:
-   ```bash
-   python ocr.py
-   ```
-
-   - 📂 Output: `extracted_texts/cv.txt` (structured text of your CV)
-
-3. **Step 3 – Run Job Matching**  
-   Run the main logic that matches your CV content to current job listings:
+2. . **Step 2 – Run OCR & Job Matching**  
+   Execute the main script to process your CV and match it against current job listings:
    ```bash
    python main.py
    ```
 
-   This script:
-   - Embeds your CV
-   - Uploads chunks into Weaviate
+   This script performs the following:
+   - Extracts text from your CV
+   - Splits your CV into chunks
+   - Embeds and uploads them to Weaviate (if not already processed)
    - Scrapes job listings
-   - Matches them using LLM extraction logic
-   - Saves final job matches in `complete_venues.csv`
+   - Matches listings using LLM-based extraction
+   - Saves the final matched jobs
+
+   - 📂 Output: 
+     - `extracted_texts/cv.txt`  – Structured text extracted from your CV
+     - `complete_venues.csv`  – List of matched job opportunities
 
 ---
 
@@ -111,30 +108,47 @@ Vectorized Embeddings → Weaviate ← Scraped Jobs ← Dialog.lk
 
 ## ✅ Requirements
 
-- Python 3.8+
-- Install dependencies:
-  ```bash
-  pip install -r requirements.txt
-  ```
+### ⚙️ System Requirements (Host Machine)
+- `Tesseract-OCR` – for optical character recognition
+- `Docker` & `Docker Compose` – required if hosting `Weaviate` locally
+- `Conda` (Miniconda or Anaconda) – recommended for managing the Python environment
 
----
 
-## 📌 Notes
+### 📦 Project Environment Setup
+1. Create and activate the Conda environment:
+     ```bash
+      conda create -n job-matcher python=3.9
+      conda activate job-matcher
+     ```
 
-- Ensure `Tesseract-OCR` is installed on your machine and its path is correctly set in `ocr.py`.
-- Make sure to update your `.env` file with the `GROQ_API_KEY` and any other necessary keys.
+2. Install Python dependencies
+     ```bash
+     pip install -r requirements.txt
+     ```
 
+3. Install Chromium for Playwright
+     ```bash
+     playwright install chromium
+     ```
+
+
+### 📁 Additional Setup
+- Rename the `.env_sample` file to `.env` and configure the necessary environment variables.
+  - To start Weaviate locally:
+     ```bash
+    cd docker
+    docker-compose up -d
+     ```
 ---
 
 ## 🧠 Future Improvements
 
 - Upload CVs via a simple web interface
-- Add support for multiple LLM providers (e.g., OpenAI, Anthropic)
 - Improve job source diversity (LinkedIn, Glassdoor, etc.)
 
 ---
 
 ## 👨‍💻 Author
 
-Made with ❤️ by Gihan Lakmal
+Made with ❤️ by Gihan Lakmal 
 
